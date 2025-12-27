@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,31 +18,50 @@ interface AIFriend {
   mood: string;
   skills: string[];
   favoriteActivity: string;
+  xp: number;
+  achievements: string[];
+  messagesCount: number;
 }
 
 const Index = () => {
-  const [friends, setFriends] = useState<AIFriend[]>([
-    {
-      id: '1',
-      name: 'Alex',
-      skinUrl: '/placeholder.svg',
-      personality: 'Смелый и дружелюбный',
-      level: 15,
-      mood: 'Счастлив',
-      skills: ['Строительство', 'Сражения', 'Фарм'],
-      favoriteActivity: 'Исследование пещер',
-    },
-    {
-      id: '2',
-      name: 'Steve',
-      skinUrl: '/placeholder.svg',
-      personality: 'Мудрый и терпеливый',
-      level: 28,
-      mood: 'Спокоен',
-      skills: ['Редстоун', 'Майнинг', 'Торговля'],
-      favoriteActivity: 'Создание механизмов',
-    },
-  ]);
+  const [friends, setFriends] = useState<AIFriend[]>(() => {
+    const saved = localStorage.getItem('mcAiFriends');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [
+      {
+        id: '1',
+        name: 'Alex',
+        skinUrl: '/placeholder.svg',
+        personality: 'Смелый и дружелюбный',
+        level: 15,
+        mood: 'Счастлив',
+        skills: ['Строительство', 'Сражения', 'Фарм'],
+        favoriteActivity: 'Исследование пещер',
+        xp: 450,
+        achievements: ['Первый друг', 'Строитель'],
+        messagesCount: 0,
+      },
+      {
+        id: '2',
+        name: 'Steve',
+        skinUrl: '/placeholder.svg',
+        personality: 'Мудрый и терпеливый',
+        level: 28,
+        mood: 'Спокоен',
+        skills: ['Редстоун', 'Майнинг', 'Торговля'],
+        favoriteActivity: 'Создание механизмов',
+        xp: 840,
+        achievements: ['Первый друг', 'Инженер', 'Мастер редстоуна'],
+        messagesCount: 0,
+      },
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mcAiFriends', JSON.stringify(friends));
+  }, [friends]);
 
   const [selectedFriend, setSelectedFriend] = useState<AIFriend | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -80,6 +99,9 @@ const Index = () => {
       mood: newFriend.mood || 'Нейтрален',
       skills: newFriend.skills || [],
       favoriteActivity: newFriend.favoriteActivity || 'Исследование',
+      xp: 0,
+      achievements: ['Первый друг'],
+      messagesCount: 0,
     };
 
     setFriends([...friends, friend]);
@@ -109,21 +131,100 @@ const Index = () => {
     }
   };
 
+  const addXP = (friendId: string, amount: number) => {
+    setFriends(prevFriends => 
+      prevFriends.map(f => {
+        if (f.id !== friendId) return f;
+        
+        const newXP = f.xp + amount;
+        const xpForNextLevel = f.level * 100;
+        const newLevel = newXP >= xpForNextLevel ? f.level + 1 : f.level;
+        const finalXP = newXP >= xpForNextLevel ? newXP - xpForNextLevel : newXP;
+        
+        const newAchievements = [...f.achievements];
+        if (newLevel === 10 && !newAchievements.includes('Уровень 10')) {
+          newAchievements.push('Уровень 10');
+          toast.success(`${f.name} достиг 10 уровня! 🎉`);
+        }
+        if (newLevel === 25 && !newAchievements.includes('Уровень 25')) {
+          newAchievements.push('Уровень 25');
+          toast.success(`${f.name} достиг 25 уровня! 🏆`);
+        }
+        if (f.messagesCount + 1 === 10 && !newAchievements.includes('Болтун')) {
+          newAchievements.push('Болтун');
+          toast.success(`${f.name} получил достижение "Болтун"! 💬`);
+        }
+        if (f.messagesCount + 1 === 50 && !newAchievements.includes('Лучший друг')) {
+          newAchievements.push('Лучший друг');
+          toast.success(`${f.name} получил достижение "Лучший друг"! ❤️`);
+        }
+        
+        if (newLevel > f.level) {
+          toast.success(`${f.name} повысил уровень! Теперь ${newLevel} 🎊`);
+        }
+        
+        return {
+          ...f,
+          xp: finalXP,
+          level: newLevel,
+          achievements: newAchievements,
+          messagesCount: f.messagesCount + 1,
+        };
+      })
+    );
+  };
+
   const sendMessage = () => {
     if (!chatMessage.trim() || !selectedFriend) return;
 
     setChatHistory([...chatHistory, { from: 'Ты', text: chatMessage }]);
 
-    const responses = [
+    const greetings = [
       `Привет! Я ${selectedFriend.name}, готов к приключениям! 🎮`,
-      `Отличная идея! Моя специальность - ${selectedFriend.skills[0]}!`,
-      `Я сейчас ${selectedFriend.mood.toLowerCase()}. Давай займёмся чем-то интересным!`,
-      `Знаешь, больше всего люблю ${selectedFriend.favoriteActivity.toLowerCase()}!`,
-      `Я уже ${selectedFriend.level} уровня! Вместе мы сильнее! 💪`,
+      `Йо! Что будем делать сегодня? 😎`,
+      `Эй, ${selectedFriend.name} на связи! 👋`,
     ];
 
+    const skillResponses = [
+      `Отличная идея! Моя специальность - ${selectedFriend.skills[0]}!`,
+      `Знаешь, я крут в ${selectedFriend.skills[0]}! 💪`,
+      `Могу помочь с ${selectedFriend.skills[0]}, это моё! 🔥`,
+    ];
+
+    const moodResponses = [
+      `Я сейчас ${selectedFriend.mood.toLowerCase()}. Давай займёмся чем-то интересным!`,
+      `Настроение - ${selectedFriend.mood.toLowerCase()}! Идём творить! ✨`,
+      `Чувствую себя ${selectedFriend.mood.toLowerCase()}, но готов к делу! 💯`,
+    ];
+
+    const activityResponses = [
+      `Знаешь, больше всего люблю ${selectedFriend.favoriteActivity.toLowerCase()}!`,
+      `${selectedFriend.favoriteActivity} - моя стихия! 🌟`,
+      `Предлагаю заняться ${selectedFriend.favoriteActivity.toLowerCase()}! 🎯`,
+    ];
+
+    const levelResponses = [
+      `Я уже ${selectedFriend.level} уровня! Вместе мы сильнее! 💪`,
+      `Уровень ${selectedFriend.level}! Скоро буду ещё круче! 🚀`,
+      `${selectedFriend.level} lvl, чувствую силу! ⚡`,
+    ];
+
+    const funResponses = [
+      'Слышал, что за горами нашли алмазы! 💎',
+      'Эндермен опять украл мой блок... 😤',
+      'Крипер чуть не взорвал мою базу вчера! 💥',
+      'Давай построим что-то эпичное! 🏰',
+      'Жители деревни предлагают крутую сделку! 🤝',
+      'Энчант на удачу - лучший! ✨',
+      'Нужно больше факелов, тут темно! 🔦',
+    ];
+
+    const allResponses = [...greetings, ...skillResponses, ...moodResponses, ...activityResponses, ...levelResponses, ...funResponses];
+
     setTimeout(() => {
-      setChatHistory(prev => [...prev, { from: selectedFriend.name, text: responses[Math.floor(Math.random() * responses.length)] }]);
+      const response = allResponses[Math.floor(Math.random() * allResponses.length)];
+      setChatHistory(prev => [...prev, { from: selectedFriend.name, text: response }]);
+      addXP(selectedFriend.id, 15);
     }, 800);
 
     setChatMessage('');
@@ -311,14 +412,26 @@ const Index = () => {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">{friend.personality}</p>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 mb-2">
                     {friend.skills.slice(0, 3).map(skill => (
                       <Badge key={skill} variant="outline" className="text-xs border-accent/30 text-accent">
                         {skill}
                       </Badge>
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">XP</span>
+                      <span className="text-accent font-bold">{friend.xp}/{friend.level * 100}</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                        style={{ width: `${(friend.xp / (friend.level * 100)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Icon name="Heart" size={12} className="text-primary" />
                     {friend.favoriteActivity}
                   </p>
@@ -337,9 +450,24 @@ const Index = () => {
                 className="w-12 h-12 rounded-lg border-2 border-accent/50"
                 style={{ imageRendering: 'pixelated' }}
               />
-              <div>
-                <h3 className="font-bold text-accent text-lg">{selectedFriend.name}</h3>
-                <p className="text-xs text-muted-foreground">Уровень {selectedFriend.level}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-accent text-lg">{selectedFriend.name}</h3>
+                  <Badge className="text-xs bg-accent/20 text-accent border-accent/30">
+                    <Icon name="Star" size={12} className="mr-1" />
+                    {selectedFriend.level} lvl
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Icon name="MessageCircle" size={12} className="text-primary" />
+                    <span className="text-muted-foreground">{selectedFriend.messagesCount} сообщений</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Icon name="Trophy" size={12} className="text-accent" />
+                    <span className="text-muted-foreground">{selectedFriend.achievements.length} достижений</span>
+                  </div>
+                </div>
               </div>
               <Button 
                 variant="ghost" 
@@ -378,6 +506,27 @@ const Index = () => {
                   </div>
                 ))
               )}
+            </div>
+
+            <div className="mb-3 p-3 bg-muted/30 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold text-primary">Прогресс друга</p>
+                <p className="text-xs text-accent">{selectedFriend.xp}/{selectedFriend.level * 100} XP</p>
+              </div>
+              <div className="h-2 bg-background rounded-full overflow-hidden mb-2">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary via-accent to-secondary transition-all duration-500 shadow-[0_0_10px_rgba(0,255,136,0.5)]"
+                  style={{ width: `${(selectedFriend.xp / (selectedFriend.level * 100)) * 100}%` }}
+                />
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {selectedFriend.achievements.map(achievement => (
+                  <Badge key={achievement} variant="outline" className="text-xs border-accent/40 text-accent">
+                    <Icon name="Award" size={10} className="mr-1" />
+                    {achievement}
+                  </Badge>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-2">
