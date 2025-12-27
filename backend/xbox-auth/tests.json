@@ -1,0 +1,52 @@
+{
+  "tests": [
+    {
+      "name": "Get Xbox auth URL",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "get_auth_url",
+        "redirect_uri": "https://localhost:3000/auth/callback"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "auth_url": "string",
+        "status": "ready"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Connect friend to Xbox",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "connect_friend",
+        "friend_id": "123",
+        "friend_name": "TestFriend",
+        "xbox_token": "test_token"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "gamertag": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Send friend request",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "send_friend_request",
+        "gamertag": "AI_TestFriend",
+        "player_xuid": "123456"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
