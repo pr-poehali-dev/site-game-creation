@@ -1,397 +1,405 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-interface NPC {
+interface AIFriend {
   id: string;
   name: string;
-  profession: string;
-  skin: string;
+  skinUrl: string;
   personality: string;
-  animations: string[];
-  dialogue: string;
-  world?: string;
+  level: number;
+  mood: string;
+  skills: string[];
+  favoriteActivity: string;
 }
 
 const Index = () => {
-  const [npcs, setNpcs] = useState<NPC[]>([
+  const [friends, setFriends] = useState<AIFriend[]>([
     {
       id: '1',
-      name: 'Стив-торговец',
-      profession: 'Торговец',
-      skin: 'villager',
-      personality: 'Дружелюбный',
-      animations: ['wave', 'trade', 'happy'],
-      dialogue: 'Приветствую! У меня лучшие товары!',
+      name: 'Alex',
+      skinUrl: '/placeholder.svg',
+      personality: 'Смелый и дружелюбный',
+      level: 15,
+      mood: 'Счастлив',
+      skills: ['Строительство', 'Сражения', 'Фарм'],
+      favoriteActivity: 'Исследование пещер',
     },
     {
       id: '2',
-      name: 'Алекс-страж',
-      profession: 'Охранник',
-      skin: 'knight',
-      personality: 'Серьёзный',
-      animations: ['guard', 'attack', 'alert'],
-      dialogue: 'Стой! Кто идёт?',
-    },
-    {
-      id: '3',
-      name: 'Волшебник Мерлин',
-      profession: 'Маг',
-      skin: 'wizard',
-      personality: 'Мудрый',
-      animations: ['cast', 'float', 'study'],
-      dialogue: 'Магия - это искусство...',
+      name: 'Steve',
+      skinUrl: '/placeholder.svg',
+      personality: 'Мудрый и терпеливый',
+      level: 28,
+      mood: 'Спокоен',
+      skills: ['Редстоун', 'Майнинг', 'Торговля'],
+      favoriteActivity: 'Создание механизмов',
     },
   ]);
 
-  const [selectedNpc, setSelectedNpc] = useState<NPC | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<AIFriend | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [newNpc, setNewNpc] = useState<Partial<NPC>>({
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState<{ from: string; text: string }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [newFriend, setNewFriend] = useState<Partial<AIFriend>>({
     name: '',
-    profession: 'Торговец',
-    skin: 'villager',
-    personality: 'Дружелюбный',
-    animations: [],
-    dialogue: '',
+    skinUrl: '/placeholder.svg',
+    personality: '',
+    level: 1,
+    mood: 'Нейтрален',
+    skills: [],
+    favoriteActivity: '',
   });
 
-  const professions = ['Торговец', 'Охранник', 'Маг', 'Фермер', 'Кузнец', 'Строитель'];
-  const skins = ['villager', 'knight', 'wizard', 'farmer', 'blacksmith', 'builder'];
-  const personalities = ['Дружелюбный', 'Серьёзный', 'Мудрый', 'Весёлый', 'Грустный', 'Злой'];
-  const availableAnimations = ['wave', 'trade', 'happy', 'guard', 'attack', 'alert', 'cast', 'float', 'study', 'work', 'dance', 'sleep'];
+  const personalities = ['Смелый и дружелюбный', 'Мудрый и терпеливый', 'Весёлый и энергичный', 'Спокойный и тихий', 'Хитрый и умный'];
+  const moods = ['Счастлив', 'Спокоен', 'Возбуждён', 'Грустит', 'Сосредоточен'];
+  const availableSkills = ['Строительство', 'Сражения', 'Фарм', 'Редстоун', 'Майнинг', 'Торговля', 'Зачарование', 'Варка зелий'];
+  const activities = ['Исследование пещер', 'Создание механизмов', 'Строительство домов', 'Охота на мобов', 'Сбор ресурсов', 'Торговля с жителями'];
 
-  const worlds = ['Основной мир', 'Пещеры', 'Деревня', 'Замок', 'Шахта'];
-
-  const handleCreateNpc = () => {
-    if (!newNpc.name || !newNpc.dialogue) {
-      toast.error('Заполните имя и диалог НПС');
+  const handleCreateFriend = () => {
+    if (!newFriend.name || !newFriend.personality) {
+      toast.error('Заполните имя и характер друга');
       return;
     }
 
-    const npc: NPC = {
+    const friend: AIFriend = {
       id: Date.now().toString(),
-      name: newNpc.name,
-      profession: newNpc.profession || 'Торговец',
-      skin: newNpc.skin || 'villager',
-      personality: newNpc.personality || 'Дружелюбный',
-      animations: newNpc.animations || [],
-      dialogue: newNpc.dialogue || '',
+      name: newFriend.name,
+      skinUrl: newFriend.skinUrl || '/placeholder.svg',
+      personality: newFriend.personality,
+      level: newFriend.level || 1,
+      mood: newFriend.mood || 'Нейтрален',
+      skills: newFriend.skills || [],
+      favoriteActivity: newFriend.favoriteActivity || 'Исследование',
     };
 
-    setNpcs([...npcs, npc]);
-    setNewNpc({ name: '', profession: 'Торговец', skin: 'villager', personality: 'Дружелюбный', animations: [], dialogue: '' });
+    setFriends([...friends, friend]);
+    setNewFriend({ name: '', skinUrl: '/placeholder.svg', personality: '', level: 1, mood: 'Нейтрален', skills: [], favoriteActivity: '' });
     setIsCreating(false);
-    toast.success(`НПС "${npc.name}" создан!`);
+    toast.success(`ИИ-друг "${friend.name}" создан! 🎮`);
   };
 
-  const toggleAnimation = (anim: string) => {
-    const current = newNpc.animations || [];
-    if (current.includes(anim)) {
-      setNewNpc({ ...newNpc, animations: current.filter(a => a !== anim) });
+  const toggleSkill = (skill: string) => {
+    const current = newFriend.skills || [];
+    if (current.includes(skill)) {
+      setNewFriend({ ...newFriend, skills: current.filter(s => s !== skill) });
     } else {
-      setNewNpc({ ...newNpc, animations: [...current, anim] });
+      setNewFriend({ ...newFriend, skills: [...current, skill] });
     }
   };
 
-  const connectToWorld = (npcId: string, world: string) => {
-    setNpcs(npcs.map(npc => npc.id === npcId ? { ...npc, world } : npc));
-    toast.success(`НПС подключен к миру "${world}"`);
+  const handleSkinUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setNewFriend({ ...newFriend, skinUrl: reader.result as string });
+        toast.success('Скин загружен! 🎨');
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const getSkinEmoji = (skin: string) => {
-    const map: Record<string, string> = {
-      villager: '🧑‍🌾',
-      knight: '⚔️',
-      wizard: '🧙',
-      farmer: '👨‍🌾',
-      blacksmith: '🔨',
-      builder: '👷',
-    };
-    return map[skin] || '🧑';
+  const sendMessage = () => {
+    if (!chatMessage.trim() || !selectedFriend) return;
+
+    setChatHistory([...chatHistory, { from: 'Ты', text: chatMessage }]);
+
+    const responses = [
+      `Привет! Я ${selectedFriend.name}, готов к приключениям! 🎮`,
+      `Отличная идея! Моя специальность - ${selectedFriend.skills[0]}!`,
+      `Я сейчас ${selectedFriend.mood.toLowerCase()}. Давай займёмся чем-то интересным!`,
+      `Знаешь, больше всего люблю ${selectedFriend.favoriteActivity.toLowerCase()}!`,
+      `Я уже ${selectedFriend.level} уровня! Вместе мы сильнее! 💪`,
+    ];
+
+    setTimeout(() => {
+      setChatHistory(prev => [...prev, { from: selectedFriend.name, text: responses[Math.floor(Math.random() * responses.length)] }]);
+    }, 800);
+
+    setChatMessage('');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90] p-4 md:p-8" style={{ fontFamily: '"Press Start 2P", cursive' }}>
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8 text-center">
-          <h1 className="text-2xl md:text-4xl mb-4 text-primary drop-shadow-lg" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.3)' }}>
-            🎮 NPC Мод Майнкрафт
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] p-4" style={{ fontFamily: '"Orbitron", sans-serif' }}>
+      <div className="max-w-6xl mx-auto pb-20">
+        <header className="mb-6 text-center">
+          <h1 
+            className="text-3xl md:text-5xl font-black mb-2 bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#a855f7] bg-clip-text text-transparent"
+            style={{ textShadow: '0 0 20px rgba(0,255,136,0.5), 0 0 40px rgba(0,212,255,0.3)' }}
+          >
+            ИИ-ДРУЗЬЯ
           </h1>
-          <p className="text-xs md:text-sm text-muted-foreground mb-6">Создавай и управляй персонажами</p>
+          <p className="text-sm text-accent mb-4 tracking-widest uppercase">Minecraft Bedrock Edition</p>
           
           <Dialog open={isCreating} onOpenChange={setIsCreating}>
             <DialogTrigger asChild>
-              <Button size="lg" className="text-xs md:text-sm shadow-lg hover:scale-105 transition-transform" style={{ imageRendering: 'pixelated' }}>
-                <Icon name="Plus" size={20} className="mr-2" />
-                Создать НПС
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-primary to-accent text-black font-bold shadow-[0_0_20px_rgba(0,255,136,0.6)] hover:shadow-[0_0_30px_rgba(0,255,136,0.8)] transition-all"
+              >
+                <Icon name="UserPlus" size={20} className="mr-2" />
+                Создать ИИ-друга
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto border-primary/30 bg-card">
               <DialogHeader>
-                <DialogTitle className="text-sm md:text-base">Новый персонаж</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-primary">Новый ИИ-друг</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative">
+                    <img 
+                      src={newFriend.skinUrl} 
+                      alt="Skin preview" 
+                      className="w-32 h-32 rounded-lg border-2 border-primary/50 object-cover"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent rounded-lg pointer-events-none" />
+                  </div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={fileInputRef}
+                    onChange={handleSkinUpload}
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-accent/50 text-accent hover:bg-accent/10"
+                  >
+                    <Icon name="Upload" size={16} className="mr-2" />
+                    Загрузить скин
+                  </Button>
+                </div>
+                
                 <div>
-                  <Label className="text-xs">Имя НПС</Label>
+                  <Label className="text-xs text-muted-foreground">Имя друга</Label>
                   <Input
-                    value={newNpc.name}
-                    onChange={(e) => setNewNpc({ ...newNpc, name: e.target.value })}
+                    value={newFriend.name}
+                    onChange={(e) => setNewFriend({ ...newFriend, name: e.target.value })}
                     placeholder="Введите имя"
-                    className="text-xs"
+                    className="bg-input border-primary/30"
                   />
                 </div>
                 
                 <div>
-                  <Label className="text-xs">Профессия</Label>
-                  <Select value={newNpc.profession} onValueChange={(val) => setNewNpc({ ...newNpc, profession: val })}>
-                    <SelectTrigger className="text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {professions.map(p => (
-                        <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-xs">Внешность</Label>
-                  <Select value={newNpc.skin} onValueChange={(val) => setNewNpc({ ...newNpc, skin: val })}>
-                    <SelectTrigger className="text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skins.map(s => (
-                        <SelectItem key={s} value={s} className="text-xs">{getSkinEmoji(s)} {s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-xs">Характер</Label>
-                  <Select value={newNpc.personality} onValueChange={(val) => setNewNpc({ ...newNpc, personality: val })}>
-                    <SelectTrigger className="text-xs">
-                      <SelectValue />
+                  <Label className="text-xs text-muted-foreground">Характер</Label>
+                  <Select value={newFriend.personality} onValueChange={(val) => setNewFriend({ ...newFriend, personality: val })}>
+                    <SelectTrigger className="bg-input border-primary/30">
+                      <SelectValue placeholder="Выберите характер" />
                     </SelectTrigger>
                     <SelectContent>
                       {personalities.map(p => (
-                        <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+                        <SelectItem key={p} value={p}>{p}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label className="text-xs mb-2 block">Анимации и эмоции</Label>
+                  <Label className="text-xs text-muted-foreground">Настроение</Label>
+                  <Select value={newFriend.mood} onValueChange={(val) => setNewFriend({ ...newFriend, mood: val })}>
+                    <SelectTrigger className="bg-input border-primary/30">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {moods.map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Навыки (выберите до 3)</Label>
                   <div className="flex flex-wrap gap-2">
-                    {availableAnimations.map(anim => (
+                    {availableSkills.map(skill => (
                       <Badge
-                        key={anim}
-                        variant={newNpc.animations?.includes(anim) ? 'default' : 'outline'}
-                        className="cursor-pointer text-xs hover:scale-105 transition-transform"
-                        onClick={() => toggleAnimation(anim)}
+                        key={skill}
+                        variant={newFriend.skills?.includes(skill) ? 'default' : 'outline'}
+                        className={`cursor-pointer transition-all ${
+                          newFriend.skills?.includes(skill) 
+                            ? 'bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,255,136,0.4)]' 
+                            : 'border-muted hover:border-primary/50'
+                        }`}
+                        onClick={() => toggleSkill(skill)}
                       >
-                        {anim}
+                        {skill}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-xs">Диалог</Label>
-                  <Textarea
-                    value={newNpc.dialogue}
-                    onChange={(e) => setNewNpc({ ...newNpc, dialogue: e.target.value })}
-                    placeholder="Что говорит НПС?"
-                    className="text-xs"
-                    rows={3}
+                  <Label className="text-xs text-muted-foreground">Любимое занятие</Label>
+                  <Select value={newFriend.favoriteActivity} onValueChange={(val) => setNewFriend({ ...newFriend, favoriteActivity: val })}>
+                    <SelectTrigger className="bg-input border-primary/30">
+                      <SelectValue placeholder="Выберите занятие" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activities.map(a => (
+                        <SelectItem key={a} value={a}>{a}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs text-muted-foreground">Уровень</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={newFriend.level}
+                    onChange={(e) => setNewFriend({ ...newFriend, level: parseInt(e.target.value) || 1 })}
+                    className="bg-input border-primary/30"
                   />
                 </div>
 
-                <Button onClick={handleCreateNpc} className="w-full text-xs">
-                  <Icon name="Save" size={16} className="mr-2" />
-                  Сохранить персонажа
+                <Button 
+                  onClick={handleCreateFriend} 
+                  className="w-full bg-gradient-to-r from-primary to-accent text-black font-bold"
+                >
+                  <Icon name="Check" size={16} className="mr-2" />
+                  Создать друга
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </header>
 
-        <Tabs defaultValue="library" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 text-xs">
-            <TabsTrigger value="library">
-              <Icon name="Library" size={16} className="mr-2" />
-              Библиотека
-            </TabsTrigger>
-            <TabsTrigger value="worlds">
-              <Icon name="Globe" size={16} className="mr-2" />
-              Миры
-            </TabsTrigger>
-            <TabsTrigger value="templates">
-              <Icon name="Package" size={16} className="mr-2" />
-              Шаблоны
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="library" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {npcs.map(npc => (
-                <Card
-                  key={npc.id}
-                  className="p-4 border-4 border-muted shadow-lg hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-                  style={{ imageRendering: 'pixelated' }}
-                  onClick={() => setSelectedNpc(npc)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="text-4xl">{getSkinEmoji(npc.skin)}</div>
-                    {npc.world && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Icon name="MapPin" size={12} className="mr-1" />
-                        {npc.world}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {friends.map(friend => (
+            <Card
+              key={friend.id}
+              className="p-4 bg-card border-2 border-primary/20 hover:border-primary/60 transition-all cursor-pointer hover:shadow-[0_0_25px_rgba(0,255,136,0.3)]"
+              onClick={() => {
+                setSelectedFriend(friend);
+                setChatHistory([]);
+              }}
+            >
+              <div className="flex gap-4">
+                <div className="relative">
+                  <img 
+                    src={friend.skinUrl} 
+                    alt={friend.name}
+                    className="w-20 h-20 rounded-lg border-2 border-primary/50 object-cover"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                  <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold">
+                    {friend.level}
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-bold text-primary">{friend.name}</h3>
+                    <Badge variant="secondary" className="text-xs bg-secondary/20 text-secondary border-secondary/30">
+                      {friend.mood}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{friend.personality}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {friend.skills.slice(0, 3).map(skill => (
+                      <Badge key={skill} variant="outline" className="text-xs border-accent/30 text-accent">
+                        {skill}
                       </Badge>
-                    )}
+                    ))}
                   </div>
-                  <h3 className="text-xs md:text-sm font-bold mb-2 truncate">{npc.name}</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">{npc.profession}</Badge>
-                      <Badge variant="outline" className="text-xs">{npc.personality}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{npc.dialogue}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {npc.animations.slice(0, 3).map(anim => (
-                        <Badge key={anim} className="text-xs">{anim}</Badge>
-                      ))}
-                      {npc.animations.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">+{npc.animations.length - 3}</Badge>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <Icon name="Heart" size={12} className="text-primary" />
+                    {friend.favoriteActivity}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {selectedFriend && (
+          <Card className="p-4 border-2 border-accent/30 bg-card shadow-[0_0_30px_rgba(0,212,255,0.2)]">
+            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-accent/20">
+              <img 
+                src={selectedFriend.skinUrl} 
+                alt={selectedFriend.name}
+                className="w-12 h-12 rounded-lg border-2 border-accent/50"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <div>
+                <h3 className="font-bold text-accent text-lg">{selectedFriend.name}</h3>
+                <p className="text-xs text-muted-foreground">Уровень {selectedFriend.level}</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setSelectedFriend(null)}
+                className="ml-auto"
+              >
+                <Icon name="X" size={20} />
+              </Button>
             </div>
 
-            {selectedNpc && (
-              <Dialog open={!!selectedNpc} onOpenChange={() => setSelectedNpc(null)}>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-base">
-                      <span className="text-3xl">{getSkinEmoji(selectedNpc.skin)}</span>
-                      {selectedNpc.name}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Профессия</Label>
-                        <p className="text-sm">{selectedNpc.profession}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Характер</Label>
-                        <p className="text-sm">{selectedNpc.personality}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-2 block">Анимации</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedNpc.animations.map(anim => (
-                          <Badge key={anim} className="text-xs">{anim}</Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Диалог</Label>
-                      <p className="text-sm bg-muted p-3 rounded-md">{selectedNpc.dialogue}</p>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs mb-2 block">Подключить к миру</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {worlds.map(world => (
-                          <Button
-                            key={world}
-                            variant={selectedNpc.world === world ? 'default' : 'outline'}
-                            size="sm"
-                            className="text-xs"
-                            onClick={() => connectToWorld(selectedNpc.id, world)}
-                          >
-                            <Icon name="MapPin" size={14} className="mr-1" />
-                            {world}
-                          </Button>
-                        ))}
-                      </div>
+            <div className="h-64 overflow-y-auto mb-4 space-y-2 px-2">
+              {chatHistory.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-center">
+                  <div>
+                    <Icon name="MessageCircle" size={48} className="mx-auto mb-2 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">Начните беседу с {selectedFriend.name}!</p>
+                  </div>
+                </div>
+              ) : (
+                chatHistory.map((msg, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`flex ${msg.from === 'Ты' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div 
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        msg.from === 'Ты' 
+                          ? 'bg-primary/20 border border-primary/30 text-foreground' 
+                          : 'bg-accent/20 border border-accent/30 text-foreground'
+                      }`}
+                    >
+                      <p className="text-xs font-bold mb-1 opacity-70">{msg.from}</p>
+                      <p className="text-sm">{msg.text}</p>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </TabsContent>
-
-          <TabsContent value="worlds" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {worlds.map(world => {
-                const worldNpcs = npcs.filter(npc => npc.world === world);
-                return (
-                  <Card key={world} className="p-4 border-4 border-muted shadow-lg" style={{ imageRendering: 'pixelated' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon name="Globe" size={20} />
-                      <h3 className="text-sm font-bold">{world}</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      НПС в мире: {worldNpcs.length}
-                    </p>
-                    <div className="space-y-2">
-                      {worldNpcs.map(npc => (
-                        <div key={npc.id} className="flex items-center gap-2 text-xs p-2 bg-muted rounded">
-                          <span>{getSkinEmoji(npc.skin)}</span>
-                          <span className="truncate">{npc.name}</span>
-                        </div>
-                      ))}
-                      {worldNpcs.length === 0 && (
-                        <p className="text-xs text-muted-foreground italic">Нет персонажей</p>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
+                ))
+              )}
             </div>
-          </TabsContent>
 
-          <TabsContent value="templates" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { name: 'Дружелюбный торговец', profession: 'Торговец', skin: 'villager', desc: 'Готовый шаблон торговца с анимациями' },
-                { name: 'Охранник ворот', profession: 'Охранник', skin: 'knight', desc: 'Настроенный охранник для вашей крепости' },
-                { name: 'Деревенский фермер', profession: 'Фермер', skin: 'farmer', desc: 'Работник для фермы с диалогами' },
-              ].map((template, idx) => (
-                <Card key={idx} className="p-4 border-4 border-muted shadow-lg hover:shadow-xl transition-all cursor-pointer" style={{ imageRendering: 'pixelated' }}>
-                  <div className="text-4xl mb-3">{getSkinEmoji(template.skin)}</div>
-                  <h3 className="text-xs md:text-sm font-bold mb-2">{template.name}</h3>
-                  <Badge variant="outline" className="mb-3 text-xs">{template.profession}</Badge>
-                  <p className="text-xs text-muted-foreground mb-3">{template.desc}</p>
-                  <Button size="sm" className="w-full text-xs" onClick={() => toast.success('Шаблон загружен!')}>
-                    <Icon name="Download" size={14} className="mr-1" />
-                    Использовать
-                  </Button>
-                </Card>
-              ))}
+            <div className="flex gap-2">
+              <Input
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Напиши сообщение..."
+                className="bg-input border-accent/30"
+              />
+              <Button 
+                onClick={sendMessage}
+                className="bg-gradient-to-r from-accent to-secondary text-black font-bold"
+              >
+                <Icon name="Send" size={18} />
+              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </Card>
+        )}
       </div>
+
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
     </div>
   );
 };

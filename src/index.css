@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 40 20% 92%;
-    --foreground: 0 0% 15%;
+    --background: 240 10% 3%;
+    --foreground: 0 0% 98%;
 
-    --card: 40 25% 88%;
-    --card-foreground: 0 0% 15%;
+    --card: 240 8% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 40 25% 88%;
-    --popover-foreground: 0 0% 15%;
+    --popover: 240 8% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 25 44% 42%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 120 18% 38%;
+    --secondary: 280 100% 60%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 60%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 240 5% 20%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 43 100% 50%;
-    --accent-foreground: 0 0% 15%;
+    --accent: 197 100% 50%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 50%;
-    --input: 0 0% 50%;
-    --ring: 25 44% 42%;
+    --border: 240 5% 25%;
+    --input: 240 5% 15%;
+    --ring: 142 76% 36%;
 
     --radius: 0.5rem;
 
